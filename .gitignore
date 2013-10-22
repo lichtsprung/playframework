@@ -19,5 +19,6 @@ RUNNING_PID
 .target/
 .cache
 *.iml
+*.*~
 documentation/*.pdf
 framework/test/integrationtest-java/conf/evolutions/
