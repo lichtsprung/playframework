@@ -22,7 +22,7 @@ object BuildSettings {
     (x => x == "true" || x == "") map
     (_ => true) getOrElse default
 
-  val experimental = Option(System.getProperty("experimental")).filter(_ == "true").map(_ => true).getOrElse(false)
+  val experimental = Option(System.getProperty("experimental")).exists(_ == "true")
 
   val buildOrganization = "com.typesafe.play"
   val buildVersion = propOr("play.version", "2.3-SNAPSHOT")
@@ -225,14 +225,13 @@ object PlayBuild extends Build {
   lazy val PlayJavaProject = PlayRuntimeProject("Play-Java", "play-java")
     .settings(libraryDependencies := javaDeps)
     .dependsOn(PlayProject)
-    .dependsOn(PlayTestProject % "test")
 
   lazy val PlayDocsProject = PlayRuntimeProject("Play-Docs", "play-docs")
     .settings(Docs.settings: _*)
     .settings(
       libraryDependencies := playDocsDependencies
     ).dependsOn(PlayProject)
-  
+
   import ScriptedPlugin._
 
   lazy val SbtPluginProject = PlaySbtProject("SBT-Plugin", "sbt-plugin")
@@ -274,6 +273,19 @@ object PlayBuild extends Build {
       sourceGenerators in Compile <+= sourceManaged in Compile map PlayVersion
     )
 
+  lazy val PlayWsProject = PlayRuntimeProject("Play-WS", "play-ws")
+    .settings(
+      libraryDependencies := playWsDeps,
+      parallelExecution in Test := false
+    ).dependsOn(PlayProject)
+    .dependsOn(PlayTestProject % "test")
+
+  lazy val PlayWsJavaProject = PlayRuntimeProject("Play-Java-WS", "play-java-ws")
+      .settings(
+        parallelExecution in Test := false
+      ).dependsOn(PlayProject)
+    .dependsOn(PlayWsProject)
+
   lazy val PlayFiltersHelpersProject = PlayRuntimeProject("Filters-Helpers", "play-filters-helpers")
     .settings(
       binaryIssueFilters ++= Seq(
@@ -309,7 +321,7 @@ object PlayBuild extends Build {
         ProblemFilters.exclude[MissingMethodProblem]("play.filters.csrf.CSRFCheck#CSRFCheckAction.this")
       ),
       parallelExecution in Test := false
-    ).dependsOn(PlayProject, PlayTestProject % "test", PlayJavaProject % "test")
+    ).dependsOn(PlayProject, PlayTestProject % "test", PlayJavaProject % "test", PlayWsProject % "test")
 
   // This project is just for testing Play, not really a public artifact
   lazy val PlayIntegrationTestProject = PlayRuntimeProject("Play-Integration-Test", "play-integration-test")
@@ -318,7 +330,9 @@ object PlayBuild extends Build {
       libraryDependencies := integrationTestDependencies,
       previousArtifact := None
     )
-    .dependsOn(PlayProject % "test->test", PlayTestProject)
+    .dependsOn(PlayProject % "test->test", PlayWsProject, PlayWsJavaProject, PlayTestProject)
+    .dependsOn(PlayFiltersHelpersProject)
+    .dependsOn(PlayJavaProject)
 
   lazy val PlayCacheProject = PlayRuntimeProject("Play-Cache", "play-cache")
     .settings(
@@ -362,6 +376,8 @@ object PlayBuild extends Build {
     PlayJavaJdbcProject,
     PlayEbeanProject,
     PlayJpaProject,
+    PlayWsProject,
+    PlayWsJavaProject,
     SbtPluginProject,
     ConsoleProject,
     PlayTestProject,
@@ -370,7 +386,7 @@ object PlayBuild extends Build {
     PlayFiltersHelpersProject,
     PlayIntegrationTestProject
   )
-    
+
   lazy val Root = Project(
     "Root",
     file("."))

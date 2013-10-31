@@ -8,7 +8,11 @@ import scala.util.{ Try, Failure }
 import org.specs2.mutable.Specification
 import play.core.ApplicationProvider
 import java.io.File
+import scala.util.Random
 import play.api.Application
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 
 object NettyServerSpec extends Specification {
 
@@ -16,6 +20,7 @@ object NettyServerSpec extends Specification {
     def path: File = new File(".")
     def get: Try[Application] = Failure(new RuntimeException)
   }
+
 
   "NettyServer" should {
     "fail when no https.port and http.port is missing" in {
@@ -26,4 +31,6 @@ object NettyServerSpec extends Specification {
       ) must throwAn[IllegalArgumentException]
     }
   }
+
+
 }

@@ -11,17 +11,12 @@ object Dependencies {
   val specsSbt = specsBuild
   val scalaIoFile = "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.2"
 
-  val guava = "com.google.guava" % "guava" % "14.0.1"
-  // Needed by guava
-  val findBugs = "com.google.code.findbugs" % "jsr305" % "2.0.1"
-
+  val guava = "com.google.guava" % "guava" % "15.0"
+  val findBugs = "com.google.code.findbugs" % "jsr305" % "2.0.2" // Needed by guava
+  val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 
   val jdbcDeps = Seq(
-    "com.jolbox" % "bonecp" % "0.8.0-rc1" exclude ("com.google.guava", "guava"),
-
-    // bonecp needs it, but due to guavas stupid version numbering of older versions ("r08"), we need to explicitly
-    // declare a dependency on the newer version so that ivy can know which one to include
-    guava,
+    "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
 
     "com.h2database" % "h2" % "1.3.172",
 
@@ -60,7 +55,6 @@ object Dependencies {
     "org.javassist" % "javassist" % "3.18.0-GA",
 
     ("org.reflections" % "reflections" % "0.9.8" notTransitive ())
-      .exclude("com.google.guava", "guava")
       .exclude("javassist", "javassist"),
 
     guava,
@@ -88,18 +82,12 @@ object Dependencies {
     "com.typesafe.akka" % "akka-slf4j_2.10" % "2.3-SNAPSHOT",
 
     "org.scala-stm" %% "scala-stm" % "0.7",
-
+    "commons-codec" % "commons-codec" % "1.7",
 
     "joda-time" % "joda-time" % "2.2",
     "org.joda" % "joda-convert" % "1.3.1",
 
     "org.apache.commons" % "commons-lang3" % "3.1",
-
-    ("com.ning" % "async-http-client" % "1.7.21" notTransitive ())
-      .exclude("org.jboss.netty", "netty"),
-
-    "oauth.signpost" % "signpost-core" % "1.2.1.2",
-    "oauth.signpost" % "signpost-commonshttp4" % "1.2.1.2",
 
     "com.fasterxml.jackson.core" % "jackson-core" % "2.2.2",
     "com.fasterxml.jackson.core" % "jackson-annotations" % "2.2.2",
@@ -111,7 +99,7 @@ object Dependencies {
 
     specsBuild % "test",
 
-    "org.mockito" % "mockito-all" % "1.9.5" % "test",
+    mockitoAll % "test",
     "com.novocode" % "junit-interface" % "0.10" % "test" exclude("junit", "junit-dep"),
     "org.easytesting" % "fest-assert" % "1.4" % "test",
     guava % "test",
@@ -205,6 +193,17 @@ object Dependencies {
   val playCacheDeps = Seq(
     "net.sf.ehcache" % "ehcache-core" % "2.6.6",
     specsBuild % "test"
+  )
+
+  val playWsDeps = Seq(
+    guava,
+    ("com.ning" % "async-http-client" % "1.7.21" notTransitive ())
+      .exclude("org.jboss.netty", "netty"),
+    "oauth.signpost" % "signpost-core" % "1.2.1.2",
+    "oauth.signpost" % "signpost-commonshttp4" % "1.2.1.2",
+
+    specsBuild % "test",
+    mockitoAll % "test"
   )
 
 }

@@ -16,7 +16,7 @@ import play.api.libs.iteratee.Input.El
 
 import play.core.utils.CaseInsensitiveOrdered
 import play.core.Execution.Implicits.internalContext
-import play.api.Play
+import play.api.{ Application, Plugin, Play }
 
 import com.ning.http.client.{ Response => AHCResponse, Cookie => AHCCookie, ProxyServer => AHCProxyServer, _ }
 
@@ -401,6 +401,23 @@ object WS {
       prepare("GET").executeStream(consumer)
 
     /**
+     * Perform a PATCH on the request asynchronously.
+     */
+    def patch[T](body: T)(implicit wrt: Writeable[T], ct: ContentTypeOf[T]): Future[Response] = prepare("PATCH", body).execute
+
+    /**
+     * Perform a PATCH on the request asynchronously.
+     * Request body won't be chunked
+     */
+    def patch(body: File): Future[Response] = prepare("PATCH", body).execute
+
+    /**
+     * performs a POST with supplied body
+     * @param consumer that's handling the response
+     */
+    def patchAndRetrieveStream[A, T](body: T)(consumer: ResponseHeaders => Iteratee[Array[Byte], A])(implicit wrt: Writeable[T], ct: ContentTypeOf[T]): Future[Iteratee[Array[Byte], A]] = prepare("PATCH", body).executeStream(consumer)
+
+    /**
      * Perform a POST on the request asynchronously.
      */
     def post[T](body: T)(implicit wrt: Writeable[T], ct: ContentTypeOf[T]): Future[Response] = prepare("POST", body).execute
@@ -778,3 +795,23 @@ trait SignatureCalculator {
 
 }
 
+/**
+ * WSPlugin implementation hook.
+ */
+class WSPlugin(app: Application) extends Plugin {
+
+  @volatile var loaded = false
+
+  override lazy val enabled = true
+
+  override def onStart() {
+    loaded = true
+  }
+
+  override def onStop() {
+    if (loaded) {
+      WS.resetClient()
+      loaded = false
+    }
+  }
+}
